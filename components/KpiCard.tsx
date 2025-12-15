@@ -23,3 +23,4 @@ export default function KpiCard({ label, value, helper }: Props) {
     </Card>
   );
 }
+

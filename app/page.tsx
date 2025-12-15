@@ -1,33 +1,17 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import PageHeader from "../components/PageHeader";
 import KpiCard from "../components/KpiCard";
 import { Card } from "../components/Card";
+import { getKpis, type Kpi } from "../lib/api";
 
 export default function Home() {
-  // Simulated states (later replaced with real API calls)
-  const isLoading = false;
-  const hasError = false;
+  const [kpis, setKpis] = useState<Kpi[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
-  const kpis = [
-    {
-      label: "No-show rate (last 30 days)",
-      value: "8.2%",
-      helper:
-        "Target is under 5%. High no-show rates often indicate reminder or scheduling issues.",
-    },
-    {
-      label: "Claim denial rate (last 30 days)",
-      value: "4.7%",
-      helper:
-        "Target is under 3–4%. Denials typically signal coding or eligibility problems.",
-    },
-    {
-      label: "Collected revenue (last 30 days)",
-      value: "$186,420",
-      helper:
-        "Total payments received from payers and patients in the last 30 days.",
-    },
-  ];
-
+  // Keep your schedule demo table hardcoded for now (we’ll API-wire later)
   const upcomingAppointments = [
     {
       time: "9:00 AM",
@@ -51,6 +35,31 @@ export default function Home() {
       status: "High no-show risk",
     },
   ];
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        setIsLoading(true);
+        setHasError(false);
+
+        const data = await getKpis();
+        if (!cancelled) setKpis(data);
+      } catch (err) {
+        console.error(err);
+        if (!cancelled) setHasError(true);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <main className="min-h-screen p-8">
@@ -79,16 +88,25 @@ export default function Home() {
             <h2 className="text-lg font-semibold mb-3">
               Practice snapshot (last 30 days)
             </h2>
-            <div className="grid gap-6 md:grid-cols-3">
-              {kpis.map((kpi) => (
-                <KpiCard
-                  key={kpi.label}
-                  label={kpi.label}
-                  value={kpi.value}
-                  helper={kpi.helper}
-                />
-              ))}
-            </div>
+
+            {kpis.length === 0 ? (
+              <Card className="p-4">
+                <p className="text-sm text-gray-600">
+                  No KPI data available yet.
+                </p>
+              </Card>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-3">
+                {kpis.map((kpi) => (
+                  <KpiCard
+                    key={kpi.label}
+                    label={kpi.label}
+                    value={kpi.value}
+                    helper={kpi.helper}
+                  />
+                ))}
+              </div>
+            )}
           </section>
 
           {/* UPCOMING APPOINTMENTS */}

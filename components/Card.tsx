@@ -20,3 +20,4 @@ export function CardHeader({ children, className = "" }: Props) {
 export function CardContent({ children, className = "" }: Props) {
   return <div className={`p-4 pt-0 ${className}`}>{children}</div>;
 }
+
