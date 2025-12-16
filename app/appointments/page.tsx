@@ -3,10 +3,9 @@
 import { useEffect, useState } from "react";
 import PageHeader from "../../components/PageHeader";
 import { Card } from "../../components/Card";
-import {
-  getAppointments,
-  type Appointment,
-} from "../../lib/api";
+import DataTable from "../../components/DataTable";
+import FilterBar from "../../components/FilterBar";
+import { getAppointments, type Appointment } from "../../lib/api";
 
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -15,6 +14,9 @@ export default function AppointmentsPage() {
 
   const [provider, setProvider] = useState("All providers");
   const [status, setStatus] = useState("All statuses");
+
+  const controlClass =
+    "rounded-md border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-200";
 
   useEffect(() => {
     let cancelled = false;
@@ -48,12 +50,17 @@ export default function AppointmentsPage() {
         subtitle="Review upcoming and completed appointments. Filter by provider and visit status."
       />
 
-      {/* FILTERS */}
-      <div className="mb-6 flex flex-wrap gap-4">
+      <FilterBar
+        right={
+          <button className="rounded-md border border-gray-300 px-3 py-2 text-sm">
+            Export CSV
+          </button>
+        }
+      >
         <select
           value={provider}
           onChange={(e) => setProvider(e.target.value)}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className={controlClass}
         >
           <option>All providers</option>
           <option>Dr. Smith</option>
@@ -63,16 +70,15 @@ export default function AppointmentsPage() {
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className={controlClass}
         >
           <option>All statuses</option>
           <option>Pending check-in</option>
           <option>Completed</option>
           <option>No-show</option>
         </select>
-      </div>
+      </FilterBar>
 
-      {/* STATES */}
       {hasError ? (
         <Card className="p-4">
           <p className="text-sm font-semibold text-gray-900">
@@ -93,7 +99,7 @@ export default function AppointmentsPage() {
           </p>
         </Card>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+        <DataTable title="Appointments list">
           <table className="min-w-full text-sm">
             <thead>
               <tr className="border-b bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -109,9 +115,7 @@ export default function AppointmentsPage() {
               {appointments.map((appt, index) => (
                 <tr
                   key={appt.id}
-                  className={
-                    index % 2 === 0 ? "border-b" : "border-b bg-gray-50"
-                  }
+                  className={index % 2 === 0 ? "border-b" : "border-b bg-gray-50"}
                 >
                   <td className="px-3 py-2">{appt.time}</td>
                   <td className="px-3 py-2">{appt.patient}</td>
@@ -119,7 +123,15 @@ export default function AppointmentsPage() {
                   <td className="px-3 py-2">{appt.visitType}</td>
                   <td className="px-3 py-2">{appt.payer}</td>
                   <td className="px-3 py-2">
-                    <span className="rounded-full bg-gray-100 px-2 py-1 text-xs">
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset ${
+                        appt.status.toLowerCase().includes("no-show")
+                          ? "bg-red-50 text-red-700 ring-red-200"
+                          : appt.status.toLowerCase().includes("completed")
+                          ? "bg-green-50 text-green-700 ring-green-200"
+                          : "bg-gray-50 text-gray-700 ring-gray-200"
+                      }`}
+                    >
                       {appt.status}
                     </span>
                   </td>
@@ -127,7 +139,7 @@ export default function AppointmentsPage() {
               ))}
             </tbody>
           </table>
-        </div>
+        </DataTable>
       )}
     </main>
   );
